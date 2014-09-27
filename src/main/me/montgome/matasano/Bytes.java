@@ -7,7 +7,7 @@ import java.util.Set;
 
 public class Bytes {
     private static final SecureRandom RANDOM = new SecureRandom();
-    
+
     public static int bits(byte[] bytes, int start, int end) {
         int startByte = start / 8;
         int endByte = (end - 1) / 8;
@@ -22,31 +22,32 @@ public class Bytes {
         } else {
             int high = bytes[startByte];
             int low = bytes[endByte];
-            
-            System.out.println(toBinaryString((byte) high) + toBinaryString((byte) low));
-            
+
+            System.out.println(toBinaryString((byte) high)
+                + toBinaryString((byte) low));
+
             int lowBits = end % 8;
             int highBits = bits - lowBits;
-            
+
             int mask = (1 << highBits) - 1;
             System.out.println(toBinaryString((byte) mask));
 
             int highValue = (high & mask) << lowBits;
             int lowValue = (low >>> (8 - lowBits));
-            
+
             System.out.println(toBinaryString((byte) highValue));
             System.out.println(toBinaryString((byte) lowValue));
-            
+
             int value = highValue | lowValue;
             System.out.println(toBinaryString((byte) value));
-            
+
             return value;
         }
     }
 
     public static String toBinaryString(byte b) {
         StringBuilder s = new StringBuilder();
-        for (int i = 7; i >=  0; i--) {
+        for (int i = 7; i >= 0; i--) {
             if ((b & (1 << i)) != 0) {
                 s.append("1");
             } else {
@@ -55,7 +56,7 @@ public class Bytes {
         }
         return s.toString();
     }
-    
+
     public static String toBinaryString(byte[] bs) {
         StringBuilder s = new StringBuilder();
         for (byte b : bs) {
@@ -63,7 +64,7 @@ public class Bytes {
         }
         return s.toString();
     }
-    
+
     public static byte[] bytes(int... is) {
         byte[] b = new byte[is.length];
         for (int i = 0; i < is.length; i++) {
@@ -71,11 +72,11 @@ public class Bytes {
         }
         return b;
     }
-    
+
     public static byte xor(byte a, byte b) {
         return (byte) ((0xFF & a) ^ (0xFF & b));
     }
-    
+
     public static byte[] xor(byte[] a, byte[] b) {
         byte[] c = new byte[a.length];
         for (int i = 0; i < a.length; i++) {
@@ -83,7 +84,7 @@ public class Bytes {
         }
         return c;
     }
-    
+
     public static byte[] repeat(byte b, int length) {
         byte[] r = new byte[length];
         for (int i = 0; i < length; i++) {
@@ -91,7 +92,7 @@ public class Bytes {
         }
         return r;
     }
-    
+
     public static byte[] repeat(byte[] b, int length) {
         byte[] r = new byte[length];
         for (int i = 0; i < length; i++) {
@@ -99,19 +100,19 @@ public class Bytes {
         }
         return r;
     }
-    
+
     public static int ones(byte b) {
         int count = 0;
-        
+
         for (int i = 0; i < 8; i++) {
             if ((b & (1 << i)) != 0) {
                 count++;
             }
         }
-        
+
         return count;
     }
-    
+
     public static int hamming(byte[] x, byte[] y) {
         int distance = 0;
         for (int i = 0; i < x.length; i++) {
@@ -119,9 +120,10 @@ public class Bytes {
         }
         return distance;
     }
-    
+
     public static byte[][] transpose(byte[] original, int blocksize) {
-        int nBlocks = (int) Math.ceil((double) original.length / (double) blocksize);
+        int nBlocks = (int) Math.ceil((double) original.length
+            / (double) blocksize);
         byte[][] result = new byte[blocksize][nBlocks];
         for (int i = 0; i < original.length; i++) {
             int block = i / blocksize;
@@ -130,12 +132,14 @@ public class Bytes {
         }
         return result;
     }
-    
+
     public static byte[][] split(byte[] original, int blocksize) {
-        int nBlocks = (int) Math.ceil((double) original.length / (double) blocksize);
+        int nBlocks = (int) Math.ceil((double) original.length
+            / (double) blocksize);
         byte[][] blocks = new byte[nBlocks][];
         for (int i = 0; i < nBlocks; i++) {
-            blocks[i] = Arrays.copyOfRange(original, i * blocksize, Math.min(original.length, (i + 1) * blocksize));
+            blocks[i] = Arrays.copyOfRange(original, i * blocksize,
+                Math.min(original.length, (i + 1) * blocksize));
         }
         return blocks;
     }
@@ -145,7 +149,13 @@ public class Bytes {
         RANDOM.nextBytes(b);
         return b;
     }
-    
+
+    public static byte[] random(int minLength, int maxLength) {
+        int spread = maxLength - minLength;
+        int i = RANDOM.nextInt(spread + 1);
+        return random(minLength + i);
+    }
+
     public static int collisions(byte[][] blocks) {
         int collisions = 0;
         Set<WrappedBytes> seen = new HashSet<>();
@@ -159,24 +169,24 @@ public class Bytes {
         }
         return collisions;
     }
-    
+
     private static class WrappedBytes {
         private byte[] bytes;
-        
+
         public WrappedBytes(byte[] bytes) {
             this.bytes = bytes;
         }
-        
+
         @Override
         public boolean equals(Object o) {
             if (!(o instanceof WrappedBytes)) {
                 return false;
             }
-            
+
             WrappedBytes that = (WrappedBytes) o;
             return Arrays.equals(this.bytes, that.bytes);
         }
-        
+
         @Override
         public int hashCode() {
             int hash = 0;

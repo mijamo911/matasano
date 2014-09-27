@@ -1,9 +1,16 @@
 package me.montgome.matasano;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
+
+import me.montgome.matasano.oracles.CbcOracle;
+import me.montgome.matasano.oracles.EcbOracle;
+import me.montgome.matasano.oracles.Oracle;
+import me.montgome.matasano.oracles.PaddingOracle;
 
 import org.junit.Test;
 
@@ -17,7 +24,7 @@ public class Set2 {
         expected[17] = 0x04;
         expected[18] = 0x04;
         expected[19] = 0x04;
-        
+
         assertTrue(Arrays.equals(expected, Paddings.addPkcs7(original, 20)));
     }
 
@@ -32,17 +39,15 @@ public class Set2 {
                     Strings.getBytes("YELLOW SUBMARINE"),
                     Bytes.repeat((byte) 0, 16))));
     }
-    
+
     @Test
     public void problem11() throws InterruptedException {
         byte[] plaintext = Strings.getBytes("0000000000000000000000000000000000000000000000000000000000000000");
-        for (int i = 0; i < 100; i++) {
-            byte[] ciphertext = Oracles.ecb(plaintext);
-            boolean isEcb = Bytes.collisions(Bytes.split(ciphertext, 16)) > 0;
-            System.out.println(String.format("%s - %s",
-                Codec.bytesToHex(ciphertext),
-                isEcb));
-            Thread.sleep(5000);
-        }
+        Oracle cbc = new PaddingOracle(new CbcOracle());
+        Oracle ecb = new PaddingOracle(new EcbOracle());
+
+        Predicate<byte[]> isEcb = x -> Bytes.collisions(Bytes.split(x, 16)) > 0;
+        assertFalse(isEcb.test(cbc.encrypt(plaintext)));
+        assertTrue(isEcb.test(ecb.encrypt(plaintext)));
     }
 }
