@@ -2,14 +2,14 @@ package me.montgome.matasano;
 
 public class Bits {
     private byte[] bytes = new byte[0];
-    
+
     public void putBits(int offset, byte bits, int rightmostBitsToKeep) {
         //System.out.println(String.format("Offset: %s, bits: %s, keep: %s",
         //    offset, Bytes.toBinaryString(bits), rightmostBitsToKeep));
         if (rightmostBitsToKeep == 0) {
             return;
         }
-        
+
         expand(offset + rightmostBitsToKeep);
         int lowIndex = offset / 8;
         int highIndex = (offset + rightmostBitsToKeep - 1) / 8;
@@ -42,7 +42,7 @@ public class Bits {
             putBits(offset + lowLength, bits, rightmostBitsToKeep - lowLength);
         }
     }
-    
+
     public void setBit(int offset) {
         expand(offset);
         int index = offset / 8;
@@ -50,7 +50,7 @@ public class Bits {
         int shift = 7 - bit;
         bytes[index] |= 1 << shift;
     }
-    
+
     public void clearBit(int offset) {
         expand(offset);
         int index = offset / 8;
@@ -58,11 +58,11 @@ public class Bits {
         int shift = 7 - bit;
         bytes[index] &= 0xFF - (1 << shift);
     }
-    
+
     public byte[] getBytes() {
         return bytes;
     }
-    
+
     private void expand(int size) {
         int required = (size + 7) / 8;
         if (required > bytes.length) {

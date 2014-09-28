@@ -1,12 +1,16 @@
 package me.montgome.matasano.oracles;
 
-import me.montgome.matasano.Bytes;
+import java.util.function.Supplier;
+
+import lombok.AllArgsConstructor;
 import me.montgome.matasano.Ciphers;
 
+@AllArgsConstructor
 public class EcbOracle implements Oracle {
+    private Supplier<byte[]> key;
+
     @Override
     public byte[] encrypt(byte[] plaintext) {
-        byte[] key = Bytes.random(16);
-        return Ciphers.encryptEcb(plaintext, key);
+        return Ciphers.encryptEcb(plaintext, key.get());
     }
 }

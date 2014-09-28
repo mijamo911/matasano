@@ -23,23 +23,23 @@ public class Bytes {
             int high = bytes[startByte];
             int low = bytes[endByte];
 
-            System.out.println(toBinaryString((byte) high)
-                + toBinaryString((byte) low));
+            //System.out.println(toBinaryString((byte) high)
+            //    + toBinaryString((byte) low));
 
             int lowBits = end % 8;
             int highBits = bits - lowBits;
 
             int mask = (1 << highBits) - 1;
-            System.out.println(toBinaryString((byte) mask));
+            //System.out.println(toBinaryString((byte) mask));
 
             int highValue = (high & mask) << lowBits;
-            int lowValue = (low >>> (8 - lowBits));
+            int lowValue = ((0xFF & low) >>> (8 - lowBits));
 
-            System.out.println(toBinaryString((byte) highValue));
-            System.out.println(toBinaryString((byte) lowValue));
+            //System.out.println(toBinaryString((byte) highValue));
+            //System.out.println(toBinaryString((byte) lowValue));
 
             int value = highValue | lowValue;
-            System.out.println(toBinaryString((byte) value));
+            //System.out.println(toBinaryString((byte) value));
 
             return value;
         }
@@ -83,6 +83,13 @@ public class Bytes {
             c[i] = xor(a[i], b[i]);
         }
         return c;
+    }
+
+    public static byte[] repeat(int i, int length) {
+        if (i > 255) {
+            throw new IllegalArgumentException("Byte value outside of allowed range");
+        }
+        return repeat((byte) i, length);
     }
 
     public static byte[] repeat(byte b, int length) {
@@ -170,30 +177,15 @@ public class Bytes {
         return collisions;
     }
 
-    private static class WrappedBytes {
-        private byte[] bytes;
+    public static byte[] extend(byte[] b, int length) {
+        byte[] extended = new byte[length];
+        System.arraycopy(b, 0, extended, 0, b.length);
+        return extended;
+    }
 
-        public WrappedBytes(byte[] bytes) {
-            this.bytes = bytes;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof WrappedBytes)) {
-                return false;
-            }
-
-            WrappedBytes that = (WrappedBytes) o;
-            return Arrays.equals(this.bytes, that.bytes);
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 0;
-            for (byte b : bytes) {
-                hash ^= b;
-            }
-            return hash;
-        }
+    public static byte[] first(byte[] b, int count) {
+        byte[] first = new byte[count];
+        System.arraycopy(b, 0, first, 0, count);
+        return first;
     }
 }
