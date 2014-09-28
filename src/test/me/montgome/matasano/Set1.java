@@ -124,7 +124,7 @@ public class Set1 {
         String bestLine = null;
         
         for (String line : Resources.readLines("me/montgome/matasano/resources/gist.3132928.txt")) {
-            int collisions = Bytes.collisions(Bytes.split(Codec.hexToBytes(line), 16));
+            int collisions = Bytes.countCollisions(Bytes.split(Codec.hexToBytes(line), 16));
             if (collisions > maxCollisions) {
                 maxCollisions = collisions;
                 bestLine = line;

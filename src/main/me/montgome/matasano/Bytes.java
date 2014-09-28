@@ -1,9 +1,15 @@
 package me.montgome.matasano;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+
+import lombok.val;
+
+import com.google.common.base.Throwables;
 
 public class Bytes {
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -163,7 +169,7 @@ public class Bytes {
         return random(minLength + i);
     }
 
-    public static int collisions(byte[][] blocks) {
+    public static int countCollisions(byte[][] blocks) {
         int collisions = 0;
         Set<WrappedBytes> seen = new HashSet<>();
         for (byte[] block : blocks) {
@@ -187,5 +193,30 @@ public class Bytes {
         byte[] first = new byte[count];
         System.arraycopy(b, 0, first, 0, count);
         return first;
+    }
+
+    public static byte[] combine(byte[]... bs) {
+        try {
+            val s = new ByteArrayOutputStream();
+            for (byte[] b : bs) {
+                s.write(b);
+            }
+            return s.toByteArray();
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    public static byte[] firstCollision(byte[][] bs) {
+        val seen = new HashSet<WrappedBytes>();
+        for (byte[] b : bs) {
+            WrappedBytes w = new WrappedBytes(b);
+            if (seen.contains(w)) {
+                return b;
+            } else {
+                seen.add(w);
+            }
+        }
+        throw new RuntimeException("No collision found!");
     }
 }

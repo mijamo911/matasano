@@ -16,6 +16,7 @@ import me.montgome.matasano.oracles.EcbOracle;
 import me.montgome.matasano.oracles.Oracle;
 import me.montgome.matasano.oracles.Oracles;
 import me.montgome.matasano.oracles.PaddingOracle;
+import me.montgome.matasano.oracles.ProfileOracle;
 
 import org.junit.Test;
 
@@ -66,14 +67,9 @@ public class Set2 {
         byte[] ecbKey = Bytes.random(16);
 
         Oracle oracle = new PaddingOracle(() -> prefix, () -> suffix, new EcbOracle(() -> ecbKey));
+        assertTrue("Oracle is not ECB", Oracles.isEcb(oracle));
         int blockSize = Oracles.getBlockSize(oracle);
         assertEquals("Wrong block size", 16, blockSize);
-        assertTrue(
-            "Oracle is not ECB",
-            Oracles.isEcb(
-                oracle.encrypt(
-                    Bytes.repeat((byte) 65, blockSize * 2)),
-                    blockSize));
 
         Function<byte[], Map<WrappedBytes, Byte>> createDictionary = x -> {
             val map = new HashMap<WrappedBytes, Byte>();
@@ -83,7 +79,6 @@ public class Set2 {
                 byte[] ciphertext = oracle.encrypt(plaintext);
                 val key = new WrappedBytes(Bytes.first(ciphertext, plaintext.length));
                 val value = (byte) i;
-                System.out.println(String.format("%s -> %s", key, value));
                 map.put(key, value);
             }
             return map;
@@ -114,5 +109,38 @@ public class Set2 {
         assertEquals(
             Resources.readFileKeepNewlines("me/montgome/matasano/resources/Vanilla Ice - Ragtop.txt"),
             Strings.newString(Bytes.first(plaintext, i)));
+    }
+
+    @Test
+    public void problem13() {
+        byte[] key = Bytes.random(16);
+        Oracle oracle = new ProfileOracle(new EcbOracle(() -> key));
+
+        assertTrue("Oracle is not ECB", Oracles.isEcb(oracle));
+        int blockSize = Oracles.getBlockSize(oracle);
+
+        String actualRole = "user";
+        String desiredRole = "admin";
+        byte[] adminPlaintext = Paddings.addPkcs7(Strings.getBytes(desiredRole), blockSize);
+        byte[] adminCiphertext = null;
+        for (int i = 0; i < blockSize; i++) {
+            byte[] plaintext = Bytes.combine(
+                Bytes.repeat(65, i),
+                adminPlaintext,
+                adminPlaintext);
+            byte[] ciphertext = oracle.encrypt(plaintext);
+            if (Bytes.countCollisions(Bytes.split(ciphertext, blockSize)) > 0) {
+                adminCiphertext = Bytes.firstCollision(Bytes.split(ciphertext, blockSize));
+                break;
+            }
+        }
+
+        int initialPadding = Oracles.getInitialPadding(oracle);
+        byte[] padding = Bytes.repeat(65, initialPadding + Strings.getBytes(actualRole).length);
+        byte[] ciphertext = oracle.encrypt(padding);
+        System.arraycopy(adminCiphertext, 0, ciphertext, ciphertext.length - adminCiphertext.length, adminCiphertext.length);
+        byte[] plaintext = Ciphers.decryptEcb(ciphertext, key);
+        Profile p = Profile.parse(Strings.newString(plaintext));
+        assertEquals(desiredRole, p.getRole());
     }
 }

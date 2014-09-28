@@ -28,7 +28,7 @@ public class Ciphers {
     public static byte[] decryptEcb(byte[] ciphertext, byte[] key) {
         try {
             Cipher aes = Cipher.getInstance("AES/ECB/NoPadding");
-            aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"));
+            aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"));
             return Paddings.removePkcs7(aes.doFinal(ciphertext));
         } catch (InvalidKeyException | NoSuchAlgorithmException
             | NoSuchPaddingException | IllegalBlockSizeException
