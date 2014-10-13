@@ -51,7 +51,10 @@ public class Set2 {
         byte[] plaintext = Strings.getBytes("0000000000000000000000000000000000000000000000000000000000000000");
 
         Supplier<byte[]> fiveToTenRandomBytes = () -> Bytes.random(5, 10);
-        Oracle cbc = new PaddingOracle(fiveToTenRandomBytes, fiveToTenRandomBytes, new CbcOracle());
+        Oracle cbc = new PaddingOracle(
+            fiveToTenRandomBytes,
+            fiveToTenRandomBytes,
+            new CbcOracle(() -> Bytes.random(16), () -> Bytes.random(16)));
         Oracle ecb = new PaddingOracle(fiveToTenRandomBytes, fiveToTenRandomBytes, new EcbOracle(() -> Bytes.random(16)));
 
         int blockSize = 16;

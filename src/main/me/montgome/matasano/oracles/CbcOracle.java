@@ -1,13 +1,17 @@
 package me.montgome.matasano.oracles;
 
-import me.montgome.matasano.Bytes;
+import java.util.function.Supplier;
+
+import lombok.AllArgsConstructor;
 import me.montgome.matasano.Ciphers;
 
+@AllArgsConstructor
 public class CbcOracle implements Oracle {
+    private final Supplier<byte[]> key;
+    private final Supplier<byte[]> iv;
+
     @Override
     public byte[] encrypt(byte[] plaintext) {
-        byte[] key = Bytes.random(16);
-        byte[] iv = Bytes.random(16);
-        return Ciphers.encryptCbc(plaintext, key, iv);
+        return Ciphers.encryptCbc(plaintext, key.get(), iv.get());
     }
 }
