@@ -169,6 +169,20 @@ public class Bytes {
         return random(minLength + i);
     }
 
+    public static Set<WrappedBytes> getCollisions(byte[][] blocks) {
+        Set<WrappedBytes> seen = new HashSet<>();
+        Set<WrappedBytes> collisions = new HashSet<>();
+        for (byte[] block : blocks) {
+            WrappedBytes wrapped = new WrappedBytes(block);
+            if (seen.contains(wrapped)) {
+                collisions.add(wrapped);
+            } else {
+                seen.add(wrapped);
+            }
+        }
+        return collisions;
+    }
+
     public static int countCollisions(byte[][] blocks) {
         int collisions = 0;
         Set<WrappedBytes> seen = new HashSet<>();
