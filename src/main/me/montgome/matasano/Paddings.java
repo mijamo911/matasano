@@ -21,7 +21,18 @@ public class Paddings {
     }
 
     public static byte[] removePkcs7(byte[] plaintext) {
-        int padding = plaintext[plaintext.length - 1];
+        int padding = 0xFF & plaintext[plaintext.length - 1];
+
+        if (padding > plaintext.length) {
+            throw new PaddingException("Padding too long!");
+        }
+
+        for (int i = plaintext.length - padding; i < plaintext.length - 1; i++) {
+            if (plaintext[i] != padding) {
+                throw new PaddingException("Malformed padding");
+            }
+        }
+
         byte[] original = new byte[plaintext.length - padding];
         System.arraycopy(plaintext, 0, original, 0, original.length);
         return original;

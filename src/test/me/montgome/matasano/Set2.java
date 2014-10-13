@@ -199,4 +199,22 @@ public class Set2 {
             Resources.readFileKeepNewlines("me/montgome/matasano/resources/Vanilla Ice - Ragtop.txt"),
             Strings.newString(Bytes.first(plaintext, i)));
     }
+
+    @Test
+    public void problem15_1() {
+        assertTrue(
+            Arrays.equals(
+                Strings.getBytes("ICE ICE BABY"),
+                Paddings.removePkcs7(Strings.getBytes("ICE ICE BABY\04\04\04\04"))));
+    }
+
+    @Test(expected = PaddingException.class)
+    public void problem15_2() {
+        Paddings.removePkcs7(Strings.getBytes("ICE ICE BABY\05\05\05\05"));
+    }
+
+    @Test(expected = PaddingException.class)
+    public void problem15_3() {
+        Paddings.removePkcs7(Strings.getBytes("ICE ICE BABY\01\02\03\04"));
+    }
 }
