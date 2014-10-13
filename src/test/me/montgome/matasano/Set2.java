@@ -143,4 +143,60 @@ public class Set2 {
         Profile p = Profile.parse(Strings.newString(plaintext));
         assertEquals(desiredRole, p.getRole());
     }
+
+    @Test
+    public void problem14() {
+        byte[] prefix = Bytes.random(8, 24);
+        byte[] suffix = Codec.base64ToBytes(
+            Resources.readFileStripNewlines("me/montgome/matasano/resources/2.12.suffix.txt"));
+        byte[] ecbKey = Bytes.random(16);
+
+        Oracle oracle = new PaddingOracle(() -> prefix, () -> suffix, new EcbOracle(() -> ecbKey));
+        assertTrue("Oracle is not ECB", Oracles.isEcb(oracle));
+        int blockSize = Oracles.getBlockSize(oracle);
+        assertEquals("Wrong block size", 16, blockSize);
+        int prefixLength = Oracles.getPrefixLength(oracle);
+        assertEquals("Wrong prefix length", prefix.length, prefixLength);
+        int prefixPadding = blockSize - (prefixLength % blockSize);
+        int prefixBlocks = (prefixLength + (blockSize - 1)) / blockSize;
+
+        Function<byte[], Map<WrappedBytes, Byte>> createDictionary = x -> {
+            val map = new HashMap<WrappedBytes, Byte>();
+            for (int i = 0; i < 256; i++) {
+                byte[] plaintext = Bytes.extend(x, x.length + 1);
+                plaintext[plaintext.length - 1] = (byte) i;
+                byte[] ciphertext = oracle.encrypt(plaintext);
+                val key = new WrappedBytes(Bytes.first(ciphertext, plaintext.length + prefixLength));
+                val value = (byte) i;
+                map.put(key, value);
+            }
+            return map;
+        };
+
+        byte[] ciphertext = oracle.encrypt(new byte[0]);
+        byte[] plaintext = new byte[ciphertext.length];
+
+        int i = 0;
+        for (i = 0; i < ciphertext.length; i++) {
+            int blockNumber = i / blockSize + 1;
+
+            int paddingSize = blockSize - (i % blockSize) - 1 + prefixPadding;
+            byte[] padding = Bytes.repeat(0, paddingSize);
+
+            byte[] block = Bytes.extend(padding, blockNumber * blockSize - 1 + prefixPadding);
+            System.arraycopy(plaintext, 0, block, padding.length, i);
+            val dictionary = createDictionary.apply(block);
+            val dKey = new WrappedBytes(
+                Bytes.first((oracle.encrypt(padding)), (blockNumber + prefixBlocks) * blockSize));
+            System.out.println(dKey);
+            if (!dictionary.containsKey(dKey)) {
+                break;
+            }
+            plaintext[i] = dictionary.get(dKey);
+        }
+
+        assertEquals(
+            Resources.readFileKeepNewlines("me/montgome/matasano/resources/Vanilla Ice - Ragtop.txt"),
+            Strings.newString(Bytes.first(plaintext, i)));
+    }
 }
