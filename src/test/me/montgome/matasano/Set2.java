@@ -17,6 +17,7 @@ import me.montgome.matasano.oracles.Oracle;
 import me.montgome.matasano.oracles.Oracles;
 import me.montgome.matasano.oracles.PaddingOracle;
 import me.montgome.matasano.oracles.ProfileOracle;
+import me.montgome.matasano.oracles.TransformingOracle;
 
 import org.junit.Test;
 
@@ -219,5 +220,45 @@ public class Set2 {
     @Test(expected = PaddingException.class)
     public void problem15_3() {
         Paddings.removePkcs7(Strings.getBytes("ICE ICE BABY\01\02\03\04"));
+    }
+
+    @Test
+    public void problem16() {
+        byte[] key = Bytes.random(16);
+        byte[] iv = Bytes.random(16);
+        byte[] prefix = Strings.getBytes("comment1=cooking%20MCs;userdata=");
+        byte[] suffix = Strings.getBytes(";comment2=%20like%20a%20pound%20of%20bacon");
+
+        Function<byte[], byte[]> escape = b -> {
+            String s = Strings
+                .newString(b)
+                .replace(";", "")
+                .replace("=", "");
+            return Strings.getBytes(s);
+        };
+
+        Oracle oracle = new TransformingOracle(
+            escape,
+            new PaddingOracle(
+                () -> prefix,
+                () -> suffix,
+                new CbcOracle(
+                    () -> key,
+                    () -> iv)));
+
+        int blockSize = Oracles.getBlockSize(oracle);
+        int initialPadding = Oracles.getInitialPadding(oracle);
+        byte[] nothing = oracle.encrypt(new byte[0]);
+
+        byte[] encrypted = oracle.encrypt(Bytes.repeat(0, nothing.length + initialPadding));
+        byte[] diff = Bytes.xor(Bytes.extend(Strings.getBytes(";admin=true;"), blockSize), Bytes.repeat(0, blockSize));
+
+        byte[] encryptedZeroBlock = new byte[blockSize];
+        System.arraycopy(encrypted, nothing.length, encryptedZeroBlock, 0, blockSize);
+        byte[] maskedZeroBlock = Bytes.xor(encryptedZeroBlock, diff);
+        System.arraycopy(maskedZeroBlock, 0, encrypted, nothing.length, blockSize);
+
+        String recoveredPlaintext = Strings.newString(Ciphers.decryptCbc(encrypted, key, iv));
+        assertTrue(recoveredPlaintext.contains(";admin=true;"));
     }
 }

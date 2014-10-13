@@ -21,6 +21,7 @@ public class Paddings {
     }
 
     public static byte[] removePkcs7(byte[] plaintext) {
+        System.out.println(Strings.newString(plaintext));
         int padding = 0xFF & plaintext[plaintext.length - 1];
 
         if (padding > plaintext.length) {
