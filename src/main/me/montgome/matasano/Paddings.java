@@ -21,11 +21,10 @@ public class Paddings {
     }
 
     public static byte[] removePkcs7(byte[] plaintext) {
-        System.out.println(Strings.newString(plaintext));
         int padding = 0xFF & plaintext[plaintext.length - 1];
 
-        if (padding > plaintext.length) {
-            throw new PaddingException("Padding too long!");
+        if (padding == 0 || padding > plaintext.length) {
+            throw new PaddingException("Invalid padding");
         }
 
         for (int i = plaintext.length - padding; i < plaintext.length - 1; i++) {

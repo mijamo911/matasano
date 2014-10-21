@@ -13,4 +13,10 @@ public class PaddingsTest {
         byte[] actual = Paddings.addPkcs7(new byte[0], 16);
         assertTrue(Arrays.equals(expected, actual));
     }
+
+    @Test(expected = PaddingException.class)
+    public void pkcs7ZeroPaddingIsInvalid() {
+        byte[] padded = new byte[] {1, 0};
+        Paddings.removePkcs7(padded);
+    }
 }
