@@ -2,6 +2,7 @@ package me.montgome.matasano;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
@@ -10,6 +11,8 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.google.common.base.Throwables;
 
 public class Ciphers {
     public static byte[] encryptEcb(byte[] plaintext, byte[] key) {
@@ -81,6 +84,29 @@ public class Ciphers {
             | InvalidKeyException | IllegalBlockSizeException
             | BadPaddingException | IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static byte[] ctr(byte[] in, byte[] key, byte[] nonce) {
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            long counter = 0;
+
+            Cipher aes = Cipher.getInstance("AES/ECB/NoPadding");
+            aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"));
+
+            for (byte[] block : Bytes.split(in, 16)) {
+                ByteBuffer b = ByteBuffer.allocate(16);
+                b.put(nonce);
+                b.putLong(Long.reverseBytes(counter));
+                byte[] keystream = aes.doFinal(b.array());
+                out.write(Bytes.xor(block, Bytes.first(keystream, block.length)));
+                counter++;
+            }
+
+            return out.toByteArray();
+        } catch (Exception e) {
+            throw Throwables.propagate(e);
         }
     }
 }

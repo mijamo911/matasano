@@ -34,4 +34,16 @@ public class Set3 {
         assertEquals("000008ollin' in my five point oh\0", roundtrip.apply(it.next()));
         assertEquals("000009ith my rag-top down so my hair can blow", roundtrip.apply(it.next()));
     }
+
+    @Test
+    public void problem18() {
+        byte[] key = Strings.getBytes("YELLOW SUBMARINE");
+        byte[] nonce = new byte[8];
+        byte[] ciphertext = Codec.base64ToBytes("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==");
+        byte[] plaintext = Ciphers.ctr(ciphertext, key, nonce);
+
+        assertEquals(
+            "Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby I",
+            Strings.newString(plaintext));
+    }
 }
