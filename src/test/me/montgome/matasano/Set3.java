@@ -2,7 +2,10 @@ package me.montgome.matasano;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Function;
 
 import me.montgome.matasano.oracles.CbcPaddingOracle;
@@ -45,5 +48,43 @@ public class Set3 {
         assertEquals(
             "Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby I",
             Strings.newString(plaintext));
+    }
+
+    @Test
+    public void problem19() throws Exception {
+        // A terrible beauty
+    }
+
+    @Test
+    public void problem20() {
+        byte[] key = Bytes.random(16);
+        byte[] nonce = new byte[8];
+
+        Collection<byte[]> ciphertexts = new LinkedList<>();
+        for (String line : Resources.readLines("me/montgome/matasano/resources/3.20.txt")) {
+            ciphertexts.add(Ciphers.ctr(Codec.base64ToBytes(line), key, nonce));
+        }
+
+        int minLength = Integer.MAX_VALUE;
+        for (byte[] b : ciphertexts) {
+            if (b.length < minLength) {
+                minLength = b.length;
+            }
+        }
+
+        List<byte[]> truncated = new LinkedList<>();
+        for (byte[] b : ciphertexts) {
+            truncated.add(Bytes.first(b, minLength));
+        }
+
+        byte[] ciphertext = Bytes.combine(truncated);
+        byte[] recoveredKey = Cracker.getXorKey(ciphertext, minLength);
+
+        int i = 0;
+        for (String line : Resources.readLines("me/montgome/matasano/resources/3.20.truncated.txt")) {
+            String recoveredPlaintext = Strings.newString(Bytes.xor(truncated.get(i), recoveredKey));
+            assertEquals(line, recoveredPlaintext);
+            i++;
+        }
     }
 }

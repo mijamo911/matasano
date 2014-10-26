@@ -5,9 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.PriorityQueue;
-import java.util.Set;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -23,7 +21,7 @@ public class Set1 {
         String base64 = Codec.bytesToBase64(bytes);
         assertEquals("SSdtIGtpbGxpbmcgeW91ciBicmFpbiBsaWtlIGEgcG9pc29ub3VzIG11c2hyb29t", base64);
     }
-    
+
     @Test
     public void problem2() {
         byte[] a = Codec.hexToBytes("1c0111001f010100061a024b53535009181c");
@@ -31,28 +29,28 @@ public class Set1 {
         byte[] c = Bytes.xor(a,b);
         assertEquals("746865206b696420646f6e277420706c6179", Codec.bytesToHex(c));
     }
-    
+
     @Test
     public void problem3() throws Exception {
         byte[] b = Codec.hexToBytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
         ScoredPlaintext result = Cracker.singleByteXor(b);
         assertEquals("Cooking MC's like a pound of bacon", result.plaintext);
     }
-    
+
     @Test
     public void problem4() {
         ScoredPlaintext best = new ScoredPlaintext(0, null,null);
-        
+
         for (String line : Resources.readLines("me/montgome/matasano/resources/gist.3132713.txt")) {
             ScoredPlaintext candidate = Cracker.singleByteXor(Codec.hexToBytes(line));
             if (candidate.score > best.score) {
                 best = candidate;
             }
         }
-        
+
         assertEquals("Now that the party is jumping\n", best.plaintext);
     }
-    
+
     @Test
     public void problem5() throws Exception {
         byte[] plaintext = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal".getBytes("UTF-8");
@@ -66,24 +64,16 @@ public class Set1 {
                 "692b20283165286326302e27282f",
                 Codec.bytesToHex(ciphertext));
    }
-    
+
     @Test
     public void problem6() {
         byte[] ciphertext = Codec.base64ToBytes(Resources.readFileStripNewlines("me/montgome/matasano/resources/gist.3132752.txt"));
-        
+
         int nKeysToTry = 20;
         ScoredKeysize[] bestKeysizes = Cracker.keysize(ciphertext, 2, 40, nKeysToTry);
         byte[][] keys = new byte[nKeysToTry][];
         for (int j = 0; j < bestKeysizes.length; j++) {
-            byte[] key = new byte[bestKeysizes[j].keysize];
-            
-            for (int i = 0; i < key.length; i++) {
-                byte[][] transposed = Bytes.transpose(ciphertext, key.length);
-                ScoredPlaintext candidate = Cracker.singleByteXor(transposed[i]);
-                key[i] = candidate.key[0];
-            }
-            
-            keys[j] = key;
+            keys[j] = Cracker.getXorKey(ciphertext, bestKeysizes[j].keysize);
         }
 
         PriorityQueue<ScoredPlaintext> plaintexts = new PriorityQueue<ScoredPlaintext>(keys.length, Collections.reverseOrder());
@@ -93,19 +83,19 @@ public class Set1 {
             ScoredPlaintext scoredPlaintext = new ScoredPlaintext(score, plaintext, key);
             plaintexts.add(scoredPlaintext);
         }
-        
+
         ScoredPlaintext best = plaintexts.poll();
         byte[] bestKey = best.key;
         assertEquals(29, bestKey.length);
         assertTrue(Arrays.equals(
             new byte[] {84, 101, 114, 109, 105, 110, 97, 116, 111, 114, 32, 88, 58, 32, 66, 114, 105, 110, 103, 32, 116, 104, 101, 32, 110, 111, 105, 115, 101},
             bestKey));
-        
+
         assertEquals(
             Resources.readFileKeepNewlines("me/montgome/matasano/resources/Vanilla Ice - PLay That Funky Music.xor.txt"),
             best.plaintext);
     }
-    
+
     @Test
     public void problem7() throws Exception {
         byte[] ciphertext = Codec.base64ToBytes(Resources.readFileStripNewlines("me/montgome/matasano/resources/gist.3132853.txt"));
@@ -122,7 +112,7 @@ public class Set1 {
     public void problem8() {
         int maxCollisions = 0;
         String bestLine = null;
-        
+
         for (String line : Resources.readLines("me/montgome/matasano/resources/gist.3132928.txt")) {
             int collisions = Bytes.countCollisions(Bytes.split(Codec.hexToBytes(line), 16));
             if (collisions > maxCollisions) {
@@ -130,7 +120,7 @@ public class Set1 {
                 bestLine = line;
             }
         }
-        
+
         assertEquals(
             "d880619740a8a19b7840a8a31c810a3d08649af70dc06f4fd5d2d69c744cd283e2dd052f6b641dbf9d11b0348542bb5708649af70dc06f4fd5d2d69c744cd2839475c9dfdbc1d46597949d9c7e82bf5a08649af70dc06f4fd5d2d69c744cd28397a93eab8d6aecd566489154789a6b0308649af70dc06f4fd5d2d69c744cd283d403180c98c8f6db1f2a3f9c4040deb0ab51b29933f2c123c58386b06fba186a",
             bestLine);

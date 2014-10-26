@@ -210,6 +210,10 @@ public class Bytes {
     }
 
     public static byte[] combine(byte[]... bs) {
+        return combine(Arrays.asList(bs));
+    }
+
+    public static byte[] combine(Iterable<byte[]> bs) {
         try {
             val s = new ByteArrayOutputStream();
             for (byte[] b : bs) {
