@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Function;
 
 import me.montgome.matasano.oracles.CbcPaddingOracle;
@@ -104,6 +105,47 @@ public class Set3 {
 
                 long n = Long.parseLong(token);
                 assertEquals(n, 0xFFFFFFFFL & mt.genrand_int32());
+            }
+        }
+    }
+
+    @Test
+    public void problem22() throws Exception {
+        MersenneTwister mt = new MersenneTwister();
+
+        mt.init_genrand(4);
+        int output1 = mt.genrand_int32();
+        int output2 = mt.genrand_int32();
+        int output3 = mt.genrand_int32();
+        mt.init_genrand(4);
+        assertEquals(output1, mt.genrand_int32());
+        assertEquals(output2, mt.genrand_int32());
+        assertEquals(output3, mt.genrand_int32());
+
+        long start = System.currentTimeMillis();
+
+        Random random = new Random();
+        int min = 40;
+        int max = 1000;
+        long spread = 1000 - 40;
+
+        Thread.sleep((Math.abs(random.nextLong()) % (spread * 1000)) + min * 1000);
+
+        int seed = (int) (0xFFFFFFFF & System.currentTimeMillis());
+        mt.init_genrand(seed);
+
+        Thread.sleep((Math.abs(random.nextLong()) % (spread * 1000)) + min * 1000);
+
+        int output = mt.genrand_int32();
+
+        long end = System.currentTimeMillis();
+
+        for (long l = start; l < end; l++) {
+            int candidateSeed = (int) (0xFFFFFFFF & l);
+            mt.init_genrand(candidateSeed);
+            if (mt.genrand_int32() == output) {
+                assertEquals(seed, candidateSeed);
+                System.out.println(String.format("Found seed %s with output %s", seed, output));
             }
         }
     }
