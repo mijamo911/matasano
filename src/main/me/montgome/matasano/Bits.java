@@ -1,7 +1,19 @@
 package me.montgome.matasano;
 
+import java.nio.ByteBuffer;
+
 public class Bits {
-    private byte[] bytes = new byte[0];
+    private byte[] bytes;
+
+    public Bits() {
+        bytes = new byte[0];
+    }
+
+    public Bits(int i) {
+        ByteBuffer b = ByteBuffer.allocate(Integer.BYTES);
+        b.putInt(i);
+        bytes = b.array();
+    }
 
     public void putBits(int offset, byte bits, int rightmostBitsToKeep) {
         //System.out.println(String.format("Offset: %s, bits: %s, keep: %s",
@@ -43,6 +55,13 @@ public class Bits {
         }
     }
 
+    public boolean getBit(int offset) {
+        int index = offset / 8;
+        int bit = offset % 8;
+        int shift = 7 - bit;
+        return (bytes[index] & (1 << shift)) != 0;
+    }
+
     public void setBit(int offset) {
         expand(offset);
         int index = offset / 8;
@@ -57,6 +76,18 @@ public class Bits {
         int bit = offset % 8;
         int shift = 7 - bit;
         bytes[index] &= 0xFF - (1 << shift);
+    }
+
+    public void setBit(int offset, boolean value) {
+        if (value) {
+            setBit(offset);
+        } else {
+            clearBit(offset);
+        }
+    }
+
+    public void xorBit(int offset, boolean value) {
+        setBit(offset, getBit(offset) != value);
     }
 
     public byte[] getBytes() {

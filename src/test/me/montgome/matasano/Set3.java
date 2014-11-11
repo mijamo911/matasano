@@ -89,9 +89,9 @@ public class Set3 {
 
     @Test
     public void problem21() {
-        int[] key = new int[] { 0x123, 0x234, 0x345, 0x456 };
+        int[] seed = new int[] { 0x123, 0x234, 0x345, 0x456 };
         MersenneTwister mt = new MersenneTwister();
-        mt.init_by_array(key, key.length);
+        mt.initialize(seed);
 
         Iterator<String> lines = Resources.readLines("me/montgome/matasano/resources/mt19937ar.out").iterator();
         lines.next(); //Skip header line
@@ -104,7 +104,7 @@ public class Set3 {
                 }
 
                 long n = Long.parseLong(token);
-                assertEquals(n, 0xFFFFFFFFL & mt.genrand_int32());
+                assertEquals(n, 0xFFFFFFFFL & mt.nextInt());
             }
         }
     }
@@ -113,40 +113,63 @@ public class Set3 {
     public void problem22() throws Exception {
         MersenneTwister mt = new MersenneTwister();
 
-        mt.init_genrand(4);
-        int output1 = mt.genrand_int32();
-        int output2 = mt.genrand_int32();
-        int output3 = mt.genrand_int32();
-        mt.init_genrand(4);
-        assertEquals(output1, mt.genrand_int32());
-        assertEquals(output2, mt.genrand_int32());
-        assertEquals(output3, mt.genrand_int32());
+        mt.initialize(4);
+        int output1 = mt.nextInt();
+        int output2 = mt.nextInt();
+        int output3 = mt.nextInt();
+        mt.initialize(4);
+        assertEquals(output1, mt.nextInt());
+        assertEquals(output2, mt.nextInt());
+        assertEquals(output3, mt.nextInt());
 
         long start = System.currentTimeMillis();
 
         Random random = new Random();
         int min = 40;
         int max = 1000;
-        long spread = 1000 - 40;
+        long spread = max - min;
 
         Thread.sleep((Math.abs(random.nextLong()) % (spread * 1000)) + min * 1000);
 
         int seed = (int) (0xFFFFFFFF & System.currentTimeMillis());
-        mt.init_genrand(seed);
+        mt.initialize(seed);
 
         Thread.sleep((Math.abs(random.nextLong()) % (spread * 1000)) + min * 1000);
 
-        int output = mt.genrand_int32();
+        int output = mt.nextInt();
 
         long end = System.currentTimeMillis();
 
         for (long l = start; l < end; l++) {
             int candidateSeed = (int) (0xFFFFFFFF & l);
-            mt.init_genrand(candidateSeed);
-            if (mt.genrand_int32() == output) {
+            mt.initialize(candidateSeed);
+            if (mt.nextInt() == output) {
                 assertEquals(seed, candidateSeed);
                 System.out.println(String.format("Found seed %s with output %s", seed, output));
             }
+        }
+    }
+
+    @Test
+    public void problem23() {
+        Random random = new Random();
+        for (int i = 0; i < 100; i++) {
+            int foo = random.nextInt();
+            assertEquals(foo, MersenneTwister.untemper(MersenneTwister.temper(foo)));
+        }
+
+        int seed = random.nextInt();
+
+        MersenneTwister original = new MersenneTwister(seed);
+
+        int[] state = new int[MersenneTwister.N];
+        for (int i = 0; i < MersenneTwister.N; i++) {
+            state[i] = MersenneTwister.untemper(original.nextInt());
+        }
+
+        MersenneTwister clone = new MersenneTwister(state, MersenneTwister.N);
+        for (int i = 0; i < MersenneTwister.N * 2; i++) {
+            assertEquals(original.nextInt(), clone.nextInt());
         }
     }
 }
