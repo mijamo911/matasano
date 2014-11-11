@@ -45,9 +45,7 @@ public class Set3 {
         byte[] ciphertext = Codec.base64ToBytes("L77na/nrFsKvynd6HzOoG7GHTLXsTVu9qvY/2syLXzhPweyyMTJULu/6/kXX0KSvoOLSFQ==");
         byte[] plaintext = Ciphers.ctr(ciphertext, key, nonce);
 
-        assertEquals(
-            "Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby I",
-            Strings.newString(plaintext));
+        assertEquals("Yo, VIP Let's kick it Ice, Ice, baby Ice, Ice, baby I", Strings.newString(plaintext));
     }
 
     @Test
@@ -85,6 +83,28 @@ public class Set3 {
             String recoveredPlaintext = Strings.newString(Bytes.xor(truncated.get(i), recoveredKey));
             assertEquals(line, recoveredPlaintext);
             i++;
+        }
+    }
+
+    @Test
+    public void problem21() {
+        int[] key = new int[] { 0x123, 0x234, 0x345, 0x456 };
+        MersenneTwister mt = new MersenneTwister();
+        mt.init_by_array(key, key.length);
+
+        Iterator<String> lines = Resources.readLines("me/montgome/matasano/resources/mt19937ar.out").iterator();
+        lines.next(); //Skip header line
+        while (lines.hasNext()) {
+            String line = lines.next();
+            String[] tokens = line.split(" +");
+            for (String token : tokens) {
+                if (token.length() == 0) {
+                    continue;
+                }
+
+                long n = Long.parseLong(token);
+                assertEquals(n, 0xFFFFFFFFL & mt.genrand_int32());
+            }
         }
     }
 }
